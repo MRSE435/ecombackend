@@ -13,13 +13,14 @@ app.use(session({
     secret: "m7861901@ifp",
     resave: false,
     saveUninitialized: false,
+    proxy: true, // Required for Render/Trusting the reverse proxy
     cookie: {
         httpOnly: true,
-        secure: true,      // OK for localhost
-        sameSite: "lax",    // keep for now
+        secure: true,      // MUST be true for Render (HTTPS)
+        sameSite: "none",  // MUST be "none" for cross-domain cookies
         maxAge: 24 * 60 * 60 * 1000
     }
-}))
+}));
 
 //
 const requireauth = (req, res, next) => {
@@ -71,13 +72,17 @@ module.exports = Cart
 
 
 app.post("/api/register", async(req, res) => {
-    const newuser = new User({
-        username: req.body.username,
-        password: req.body.password
-    })
-    await newuser.save();
-})
-
+    try {
+        const newuser = new User({
+            username: req.body.username,
+            password: req.body.password
+        });
+        await newuser.save();
+        res.status(201).json({ message: "User registered" }); // Add this line
+    } catch (error) {
+        res.status(400).json({ message: "Registration failed" });
+    }
+});
 
 app.post("/api/login", async (req, res) => {
     const userfind = await User.findOne({
@@ -151,7 +156,11 @@ app.post("/api/deleteitemfromcart", requireauth, async (req, res) => {
 app.post("/api/logout", (req, res) => {
     req.session.destroy((err) => {
         if (err) return res.status(500).send("errr could not lpgout")
-        res.clearCookie("connect.sid")
+      res.clearCookie("connect.sid", {
+    path: "/",
+    sameSite: "none",
+    secure: true
+});
         res.status(200).send("logged out")
     })
 })
