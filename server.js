@@ -17,6 +17,7 @@ app.use(session({
     cookie: {
         httpOnly: true,
         secure: true,      // MUST be true for Render (HTTPS)
+        partitioned: true,
         sameSite: "none",  // MUST be "none" for cross-domain cookies
         maxAge: 24 * 60 * 60 * 1000
     }
