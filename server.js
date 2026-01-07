@@ -128,6 +128,7 @@ app.post("/api/decrementcart", requireauth, async (req, res) => {
         console.log("item quanity before",item.quantity)
         if (item.quantity > 1) {
             item.quantity -= 1
+            cart.markModified('items');
         }
          console.log("item quanity after",item.quantity)
         else if(item.quantity == 1) {
