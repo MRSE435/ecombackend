@@ -130,14 +130,14 @@ app.post("/api/decrementcart", requireauth, async (req, res) => {
             item.quantity -= 1
         }
          console.log("item quanity after",item.quantity)
-        if (item.quantity == 1) {
+        else if(item.quantity == 1) {
             await Cart.updateOne(
                 { username: req.session.username },
                 { $pull: { items: { productid } } }
             )
         }
     }
-   
+   await cart.save();
     res.json({ message: "Cart decremented" })
 })
 
