@@ -177,6 +177,8 @@ app.post("/api/logout", (req, res) => {
       res.clearCookie("connect.sid", {
     path: "/",
     sameSite: "none",
+          partitioned: true, // ADD THIS LINE
+            httpOnly: true
     secure: true
 });
         res.status(200).send("logged out")
