@@ -125,7 +125,7 @@ app.post("/api/decrementcart", requireauth, async (req, res) => {
     const cart = await Cart.findOne({ username: req.session.username })
     const item = await cart.items.find(p => p.productid.toString() === productid)
     if (item) {
-        if (item.quantity > 0) {
+        if (item.quantity > 1) {
             item.quantity -= 1
         }
         if (item.quantity == 1) {
