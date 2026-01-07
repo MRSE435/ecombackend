@@ -137,7 +137,7 @@ app.post("/api/decrementcart", requireauth, async (req, res) => {
             )
         }
     }
-    await cart.save()
+   
     res.json({ message: "Cart decremented" })
 })
 
