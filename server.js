@@ -121,26 +121,38 @@ app.get("/api/checkauth", (req, res) => {
 })
 
 app.post("/api/decrementcart", requireauth, async (req, res) => {
-    const { productid } = req.body
-    const cart = await Cart.findOne({ username: req.session.username })
-    const item = await cart.items.find(p => p.productid.toString() === productid)
-    if (item) {
-        console.log("item quanity before",item.quantity)
-        if (item.quantity > 1) {
-            item.quantity -= 1
-            cart.markModified('items');
+    try {
+        const { productid } = req.body;
+        const cart = await Cart.findOne({ username: req.session.username });
+
+        if (!cart) return res.status(404).json({ message: "Cart not found" });
+
+        const item = cart.items.find(p => p.productid.toString() === productid);
+
+        if (item) {
+            if (item.quantity > 1) {
+                // Scenario 1: Just reduce quantity
+                item.quantity -= 1;
+                cart.markModified('items');
+                await cart.save(); // Save the new quantity
+                return res.json({ message: "Quantity decreased" });
+            } else {
+                // Scenario 2: Quantity is 1, use $pull to remove
+                // We do NOT call cart.save() here
+                await Cart.updateOne(
+                    { username: req.session.username },
+                    { $pull: { items: { productid: productid } } }
+                );
+                return res.json({ message: "Item removed from cart via pull" });
+            }
         }
-         console.log("item quanity after",item.quantity)
-        else if(item.quantity == 1) {
-            await Cart.updateOne(
-                { username: req.session.username },
-                { $pull: { items: { productid } } }
-            )
-        }
+
+        res.status(404).json({ message: "Item not found" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
     }
-   await cart.save();
-    res.json({ message: "Cart decremented" })
-})
+});
 
 
 // 1. Fixed the typo from "delte" to "delete"
