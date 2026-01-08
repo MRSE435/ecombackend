@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === "production";
+
 
 const session = require('express-session');
 const app = express();
@@ -19,17 +21,24 @@ app.use("/images", express.static(path.join(__dirname, "public")));
 
 app.set('trust proxy', 1);
 app.use(session({
-    secret: "m7861901@ifp",
-    resave: false,
-    saveUninitialized: false,
-    proxy: true, // Required for Render/Trusting the reverse proxy
-    cookie: {
+  secret: "m7861901@ifp",
+  resave: false,
+  saveUninitialized: false,
+  proxy: true,
+  cookie: isProduction
+    ? {
         httpOnly: true,
-        secure: true,      // MUST be true for Render (HTTPS)
+        secure: true,
+        sameSite: "none",
         partitioned: true,
-        sameSite: "none",  // MUST be "none" for cross-domain cookies
         maxAge: 24 * 60 * 60 * 1000
-    }
+      }
+    : {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000
+      }
 }));
 
 //
