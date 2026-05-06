@@ -75,7 +75,10 @@ const Product = mongoose.model("Product", productSchema);
 
 
 const cartschema = new mongoose.Schema({
-    username: String,
+    userId:{type: mongoose.Schema.Types.ObjectId,
+            ref:users,
+            require:true
+    },
     items: [
         {
             productid: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
@@ -110,7 +113,10 @@ app.post("/api/login", async (req, res) => {
         password: req.body.password
     })
     if (userfind) {
-        req.session.username = userfind.username;
+         req.session.user={
+                    id:userfind._id,
+                    username:userfind.username
+                }
 
         res.status(200).send({ username: userfind.username })
     }
@@ -140,7 +146,12 @@ app.get("/api/checkauth", (req, res) => {
 app.post("/api/decrementcart", requireauth, async (req, res) => {
     try {
         const { productid } = req.body;
+<<<<<<< HEAD
         const cart = await Cart.findOne({ username: req.session.username });
+=======
+        const userId=req.session.user.id;
+        const cart = await Cart.findOne({ userId});
+>>>>>>> b2aedcf (changes the cart schema to include usaerid instead of username)
 
         if (!cart) return res.status(404).json({ message: "Cart not found" });
 
@@ -157,7 +168,11 @@ app.post("/api/decrementcart", requireauth, async (req, res) => {
                 // Scenario 2: Quantity is 1, use $pull to remove
                 // We do NOT call cart.save() here
                 await Cart.updateOne(
+<<<<<<< HEAD
                     { username: req.session.username },
+=======
+                    { userId},
+>>>>>>> b2aedcf (changes the cart schema to include usaerid instead of username)
                     { $pull: { items: { productid: productid } } }
                 );
                 return res.json({ message: "Item removed from cart via pull" });
@@ -176,9 +191,10 @@ app.post("/api/decrementcart", requireauth, async (req, res) => {
 // 2. Added res.json so the frontend gets a success signal
 app.post("/api/deleteitemfromcart", requireauth, async (req, res) => {
     const { productid } = req.body;
+       const userId=req.session.user.id;
     try {
         await Cart.updateOne(
-            { username: req.session.username },
+            { userId },
             { $pull: { items: { productid: productid } } }
         );
         res.json({ message: "Item deleted" });
@@ -205,13 +221,13 @@ app.post("/api/logout", (req, res) => {
 app.post("/api/handlecart", requireauth, async (req, res) => {
     try {
         const { productid } = req.body;
-        
+           const userId=req.session.user.id;
         // DEBUG: Log this to see if the ID is actually reaching the server
         console.log("Adding Product ID:", productid);
 
-        let cart = await Cart.findOne({ username: req.session.username });
+        let cart = await Cart.findOne({ userId});
         if (!cart) {
-            cart = new Cart({ username: req.session.username, items: [] });
+            cart = new Cart({ userId, items: [] });
         }
 
         // Potential crash point: Ensure productid exists before calling toString()
@@ -240,7 +256,7 @@ app.post("/api/handlecart", requireauth, async (req, res) => {
 
 app.get("/api/fetchcart", requireauth, async (req, res) => {
     try {
-        const cart = await Cart.findOne({ username: req.session.username }).populate("items.productid")
+        const cart = await Cart.findOne({ userId }).populate("items.productid")
         res.json(cart ? cart.items : [])
     } catch (error) {
         res.status(400).send("error")
