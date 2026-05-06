@@ -44,7 +44,7 @@ app.use(session({
 
 //
 const requireauth = (req, res, next) => {
-    if (req.session.username) {
+    if (req.session.user) {
         next()
     }
     else {
@@ -76,8 +76,8 @@ const Product = mongoose.model("Product", productSchema);
 
 const cartschema = new mongoose.Schema({
     userId:{type: mongoose.Schema.Types.ObjectId,
-            ref:users,
-            require:true
+            ref:User,
+            required:true
     },
     items: [
         {
@@ -132,10 +132,10 @@ app.get("/api/products", requireauth, async (req, res) => {
 })
 
 app.get("/api/checkauth", (req, res) => {
-    if (req.session.username) {
+    if (req.session.user) {
         res.json({
             isloggedin: true,
-            username: req.session.username
+            username: req.session.user.username
         });
     }
     else {
@@ -146,12 +146,8 @@ app.get("/api/checkauth", (req, res) => {
 app.post("/api/decrementcart", requireauth, async (req, res) => {
     try {
         const { productid } = req.body;
-<<<<<<< HEAD
-        const cart = await Cart.findOne({ username: req.session.username });
-=======
         const userId=req.session.user.id;
-        const cart = await Cart.findOne({ userId});
->>>>>>> b2aedcf (changes the cart schema to include usaerid instead of username)
+        const cart = await Cart.findOne({ userid});
 
         if (!cart) return res.status(404).json({ message: "Cart not found" });
 
@@ -168,11 +164,11 @@ app.post("/api/decrementcart", requireauth, async (req, res) => {
                 // Scenario 2: Quantity is 1, use $pull to remove
                 // We do NOT call cart.save() here
                 await Cart.updateOne(
-<<<<<<< HEAD
+
                     { username: req.session.username },
-=======
+
                     { userId},
->>>>>>> b2aedcf (changes the cart schema to include usaerid instead of username)
+
                     { $pull: { items: { productid: productid } } }
                 );
                 return res.json({ message: "Item removed from cart via pull" });
@@ -256,6 +252,7 @@ app.post("/api/handlecart", requireauth, async (req, res) => {
 
 app.get("/api/fetchcart", requireauth, async (req, res) => {
     try {
+        const userId=req.session.user.id;
         const cart = await Cart.findOne({ userId }).populate("items.productid")
         res.json(cart ? cart.items : [])
     } catch (error) {
