@@ -147,7 +147,7 @@ app.post("/api/decrementcart", requireauth, async (req, res) => {
     try {
         const { productid } = req.body;
         const userId=req.session.user.id;
-        const cart = await Cart.findOne({ userid});
+        const cart = await Cart.findOne({ userId});
 
         if (!cart) return res.status(404).json({ message: "Cart not found" });
 
