@@ -267,6 +267,12 @@ app.get("/api/fetchcart", requireauth, async (req, res) => {
 
 })
 
+
+app.get("/heathcheck",(req,res)=>{
+    res.status(200).json({
+        "message":"applciaiton is live and running on production"
+    })
+})
 if(process.env.NODE_ENV!='production')
 {
 app.listen(PORT, () => {
