@@ -1,5 +1,7 @@
+require('dotenv').config()
 const express = require('express');
 const mongoose = require('mongoose');
+const MongoStore=require('connect-mongo').default
 const cors = require('cors');
 const path = require('path');
 const PORT = process.env.PORT || 3000;
@@ -26,6 +28,10 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   proxy: true,
+  store:MongoStore.create({
+    mongoUrl:process.env.DATABASE_URL,
+    ttl:24*60*60
+  }),
   cookie: isProduction
     ? {
         httpOnly: true,
@@ -261,6 +267,12 @@ app.get("/api/fetchcart", requireauth, async (req, res) => {
 
 })
 
+if(process.env.NODE_ENV!='production')
+{
 app.listen(PORT, () => {
     console.log(`server started running at port ${PORT}`)
 })
+}
+
+
+module.exports=app;
